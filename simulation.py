@@ -1,3 +1,5 @@
+from __future__ import division
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -30,10 +32,15 @@ class Simulation(object):
         try:
             for i in xrange(self.max_iterations):
                 self.system.step(self.tlog[self.step], self.dt)
+                if i%200 == 0:
+                    # Print the step percentage. "\r" keeps everything on the
+                    # same line.
+                    out = "\r" + str(self.step/self.max_iterations) + "%"
+                    sys.stdout.write(out + " "*(10-len(out)))
+                    sys.stdout.flush()
                 self.step += 1
 
-        except MoonCollisionException as e:
-            #TODO
+        except MoonCollisionException:
             print "\n**** hit moon ****"
             # Increment step since an exception was thrown
             self.step += 2
