@@ -8,28 +8,39 @@ from moonlandermod import MoonCollisionException, EarthCollisionException, \
     MOON_RADIUS, LANDER_MASS, EARTH_LANDER_INIT_DISTANCE
 
 class LocalSystem(object):
-    """Represents the local chunck of the solar system where the
-    simulation is taking place.
+    """Represents the local chunck of the solar system. It performs all physics
+    calculations.
+
+    This class contains three bodies: the Earth, Moon, and a lander. Each call
+    to `step()` moves these three bodies forward in time by a small amount. At
+    the end of each "step", the system is checked for any collisions. If a
+    collision is detected, an appropriate collision exception is raised.
     """
-    def __init__(self, alpha, vkick, iterations):
+
+    def __init__(self, alpha, vkick, iterations, check_em_collisions=False):
+        """Initialize Earth, Moon, and Lander bodies and physics variables.
+        """
+        self.check_earth_moon_collision = check_em_collisions
         # Reduced mass
-        self.mu = (EARTH_MASS * MOON_MASS) / (EARTH_MASS + MOON_MASS)
-        # Earth / Moon distances from COM
-        self.r_com_earth = self.mu / EARTH_MASS
-        self.r_com_moon = self.mu / MOON_MASS
-        self.const_e = self.r_com_moon
-        self.const_m = self.r_com_earth
-        # Spacial scale (earth-moon dist)
+        mu = (EARTH_MASS * MOON_MASS) / (EARTH_MASS + MOON_MASS)
+        # Earth / Moon distances from center of mass (COM)
+        r_com_earth = mu / EARTH_MASS
+        r_com_moon = mu / MOON_MASS
+        # Constants used for force calculations
+        self.const_e = r_com_moon
+        self.const_m = r_com_earth
+        # Natural Spacial scale (earth-moon dist)
         self.L = 3.85000000E+08
-        self.T = sqrt(self.mu * self.L**3 / (G * EARTH_MASS * MOON_MASS))
+        # Natural Temporal scale
+        self.T = sqrt(mu * self.L**3 / (G * EARTH_MASS * MOON_MASS))
         # Earth
-        x0 = -self.r_com_earth
-        vy0 = -self.T/self.L * sqrt(G * MOON_MASS * self.r_com_earth/self.L)
+        x0 = -r_com_earth
+        vy0 = -self.T/self.L * sqrt(G * MOON_MASS * r_com_earth/self.L)
         self.earth = Planet("Earth", EARTH_MASS, EARTH_RADIUS, x0, 0, 0, vy0,
                             iterations)
         # Moon
-        x0 = self.r_com_moon
-        vy0 = self.T/self.L * sqrt(G * EARTH_MASS * self.r_com_moon/self.L)
+        x0 = r_com_moon
+        vy0 = self.T/self.L * sqrt(G * EARTH_MASS * r_com_moon/self.L)
         self.moon = Planet("Moon", MOON_MASS, MOON_RADIUS, x0, 0, 0, vy0,
                            iterations)
         # Lander
@@ -44,23 +55,39 @@ class LocalSystem(object):
         self.bodies = [self.lander, self.earth, self.moon]
 
     def step(self, t, dt):
+        """
+        Advance the system one step in time using fourth order Runge–Kutta.
+        """
         xvec = [self.earth.x, self.earth.y, self.earth.vx, self.earth.vy,
                 self.moon.x, self.moon.y, self.moon.vx, self.moon.vy,
                 self.lander.x, self.lander.y, self.lander.vx, self.lander.vy]
         dxdt = self._deriv(t, xvec)
-        self._unpack(rk4(xvec, dxdt, t, dt, self._deriv))
+        self._unpack_and_advance(rk4(xvec, dxdt, t, dt, self._deriv))
         self._check_for_collisions()
 
     def get_body_names(self):
+        """
+        Retuns a string list containing the names of the bodies.
+        """
         return [b.name for b in self.bodies]
 
     def get_logs(self):
+        """
+        Returns a list of tuples where each tuple is the x and y postion logs
+        for a body.
+        """
         return [(b.xlog, b.ylog) for b in self.bodies]
 
     def get_spacial_scale(self):
+        """
+        Returns the spacial scale used for the physics calculations.
+        """
         return self.L
 
     def get_temporal_scale(self):
+        """
+        Returns the temporal scale used for the physics calculations.
+        """
         return self.T
 
     def _deriv(self, t, xvec):
@@ -96,7 +123,7 @@ class LocalSystem(object):
                   - self.const_m*(xvec[9]-xvec[5])/rml3
         return dxdt
 
-    def _unpack(self, data):
+    def _unpack_and_advance(self, data):
         vals, data = data[:4], data[4:]
         self.earth.step(*vals)
         vals, data = data[:4], data[4:]
@@ -117,4 +144,9 @@ class LocalSystem(object):
         rml = sqrt( (xm - x)*(xm - x) + (ym - y)*(ym - y) )
         if rml*self.L <= MOON_RADIUS:
             raise MoonCollisionException("Hit the moon")
+        if self.check_earth_moon_collision:
+            rem = sqrt( (xe - xm)*(xe - xm) + (ye - ym)*(ye - ym) )
+            if rem <= (EARTH_RADIUS + MOON_RADIUS):
+                raise EarthMoonCollisionException("Earth bumped Moon")
+
 

@@ -3,6 +3,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
 
 class _BodyLog(object):
+    """
+    Helper class that wraps around a pair of position logs.
+    """
+
     def __init__(self, logpair, pos):
         self._x, self._y = logpair
         self.pos = pos
@@ -27,7 +31,8 @@ class _BodyLog(object):
 
 
 class Plotter(object):
-    """A class for plotting simulation output logs
+    """
+    A class for plotting simulation output logs
     """
     def __init__(self, base_plot_name):
         self.base_plot_name = base_plot_name
@@ -45,6 +50,8 @@ class Plotter(object):
         self.pos = pos
 
     def plot_system(self, show=True, save=True, plot_name=None):
+        if not (plot_name is None) and not isinstance(plot_name, basestring):
+            raise TypeError("Invalid plot name received")
         plt.figure()
         pearth = plt.Circle((self.earth.xf(), self.earth.yf()),
                             self.r_earth, ec="b", fc="w",
@@ -80,6 +87,8 @@ class Plotter(object):
         plt.close("all")
 
     def plot_lander_moon_distance(self, show=True, save=True, plot_name=None):
+        if not (plot_name is None) and not isinstance(plot_name, basestring):
+            raise TypeError("Invalid plot name received")
         rlm = np.sqrt((self.lander.x() - self.moon.x())**2
                 + (self.lander.y() - self.moon.y())**2)
         plt.figure()
