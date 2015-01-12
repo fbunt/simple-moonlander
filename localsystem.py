@@ -8,7 +8,8 @@ from moonlandermod import MoonCollisionException, EarthCollisionException, \
     MOON_RADIUS, LANDER_MASS, EARTH_LANDER_INIT_DISTANCE
 
 class LocalSystem(object):
-    """Represents the local chunck of the solar system. It performs all physics
+    """
+    Represents the local chunck of the solar system. It performs all physics
     calculations.
 
     This class contains three bodies: the Earth, Moon, and a lander. Each call
@@ -18,7 +19,8 @@ class LocalSystem(object):
     """
 
     def __init__(self, alpha, vkick, iterations, check_em_collisions=False):
-        """Initialize Earth, Moon, and Lander bodies and physics variables.
+        """
+        Initialize Earth, Moon, and Lander bodies and physics variables.
         """
         self.check_earth_moon_collision = check_em_collisions
         # Reduced mass
@@ -56,7 +58,7 @@ class LocalSystem(object):
 
     def step(self, t, dt):
         """
-        Advance the system one step in time using fourth order Runge–Kutta.
+        Advance the system one step in time using fourth-order Runge–Kutta.
         """
         xvec = [self.earth.x, self.earth.y, self.earth.vx, self.earth.vy,
                 self.moon.x, self.moon.y, self.moon.vx, self.moon.vy,
