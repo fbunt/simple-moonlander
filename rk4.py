@@ -1,4 +1,9 @@
 def rk4(x, dxdt, t, dt, derivative):
+    """
+    An implementation of fourth-order Runge–Kutta algorithm.
+
+    Author: Dr. Andrew Ware of the University of Montana
+    """
     th = t + 0.50*dt
 
     k1 = dt * dxdt                      # First step
