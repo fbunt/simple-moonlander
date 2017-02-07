@@ -58,7 +58,7 @@ class LocalSystem(object):
 
     def step(self, t, dt):
         """
-        Advance the system one step in time using fourth-order Runge–Kutta.
+        Advance the system one step in time using fourth-order Runge-Kutta.
         """
         xvec = [self.earth.x, self.earth.y, self.earth.vx, self.earth.vy,
                 self.moon.x, self.moon.y, self.moon.vx, self.moon.vy,
